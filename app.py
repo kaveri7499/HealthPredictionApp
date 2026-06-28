@@ -8,10 +8,8 @@ from datetime import datetime
 app = Flask(__name__)
 model = joblib.load("health_model.pkl")
 
-
-# -----------------------------
 # Create Database and Table
-# -----------------------------
+
 def init_db():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
@@ -32,10 +30,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-
-# -----------------------------
 # AI Health Prediction
-# -----------------------------
+
 def predict_health(glucose, haemoglobin, cholesterol):
 
     input_data = pd.DataFrame({
@@ -48,9 +44,9 @@ def predict_health(glucose, haemoglobin, cholesterol):
 
     return prediction[0]
 
-# -----------------------------
+
 # Home Page
-# -----------------------------
+
 @app.route('/')
 def home():
 
@@ -65,9 +61,8 @@ def home():
     return render_template("index.html", patients=patients)
 
 
-# -----------------------------
 # Add Patient
-# -----------------------------
+
 @app.route('/add', methods=['POST'])
 def add_patient():
 
@@ -118,9 +113,8 @@ def add_patient():
     return redirect('/')
 
 
-# -----------------------------
 # Edit Patient
-# -----------------------------
+
 @app.route('/edit/<int:id>')
 def edit_patient(id):
 
@@ -135,9 +129,8 @@ def edit_patient(id):
     return render_template("edit_patient.html", patient=patient)
 
 
-# -----------------------------
 # Update Patient
-# -----------------------------
+
 @app.route('/update/<int:id>', methods=['POST'])
 def update_patient(id):
 
@@ -197,9 +190,8 @@ def update_patient(id):
     return redirect('/')
 
 
-# -----------------------------
 # Delete Patient
-# -----------------------------
+
 @app.route('/delete/<int:id>')
 def delete_patient(id):
 
@@ -214,9 +206,8 @@ def delete_patient(id):
     return redirect('/')
 
 
-# -----------------------------
 # Run Application
-# -----------------------------
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
