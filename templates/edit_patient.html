@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Patient</title>
+</head>
+<body>
+
+<h2>Edit Patient</h2>
+
+<form action="/update/{{ patient[0] }}" method="POST">
+
+<label>Full Name</label><br>
+<input type="text" name="full_name" value="{{ patient[1] }}"><br><br>
+
+<label>Date of Birth</label><br>
+<input type="date" name="dob" value="{{ patient[2] }}"><br><br>
+
+<label>Email</label><br>
+<input type="email" name="email" value="{{ patient[3] }}"><br><br>
+
+<label>Glucose</label><br>
+<input type="number" step="0.01" name="glucose" value="{{ patient[4] }}"><br><br>
+
+<label>Haemoglobin</label><br>
+<input type="number" step="0.01" name="haemoglobin" value="{{ patient[5] }}"><br><br>
+
+<label>Cholesterol</label><br>
+<input type="number" step="0.01" name="cholesterol" value="{{ patient[6] }}"><br><br>
+
+<button type="submit">Update Patient</button>
+
+</form>
+
+</body>
+</html>
