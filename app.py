@@ -1,12 +1,27 @@
 from flask import Flask, render_template, request, redirect
 import sqlite3
-import joblib
-import pandas as pd
+
+
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
+
+print("API Key:", os.getenv("GEMINI_API_KEY"))   # Temporary for testing
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+
+
 import re
 from datetime import datetime
+ 
 
 app = Flask(__name__)
-model = joblib.load("health_model.pkl")
+# model = joblib.load("health_model.pkl")
 
 # Create Database and Table
 
@@ -27,6 +42,7 @@ def init_db():
     )
     """)
 
+
     conn.commit()
     conn.close()
 
@@ -34,15 +50,22 @@ def init_db():
 
 def predict_health(glucose, haemoglobin, cholesterol):
 
-    input_data = pd.DataFrame({
-        "Glucose": [float(glucose)],
-        "Hemoglobin": [float(haemoglobin)],
-        "Cholestrol": [float(cholesterol)]
-    })
+    prompt = f"""
+You are a medical assistant.
 
-    prediction = model.predict(input_data)
+Patient values:
+Glucose: {glucose}
+Haemoglobin: {haemoglobin}
+Cholesterol: {cholesterol}
 
-    return prediction[0]
+If all values are within normal range, reply:
+"Normal - No significant health risk detected."
+
+Otherwise, mention one possible health risk in one short sentence.
+"""
+    response = model.generate_content(prompt)
+
+    return response.text.strip()
 
 
 # Home Page
@@ -62,7 +85,6 @@ def home():
 
 
 # Add Patient
-
 @app.route('/add', methods=['POST'])
 def add_patient():
 
@@ -80,13 +102,12 @@ def add_patient():
         return "Invalid Email Address"
 
     # Future DOB Validation
-    dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
+    dob_date = datetime.strptime(dob, "%d/%m/%Y").date()
 
     if dob_date > datetime.today().date():
         return "Date of Birth cannot be in the future"
 
-
-
+    # AI Prediction
     remarks = predict_health(glucose, haemoglobin, cholesterol)
 
     conn = sqlite3.connect("database.db")
@@ -112,7 +133,6 @@ def add_patient():
 
     return redirect('/')
 
-
 # Edit Patient
 
 @app.route('/edit/<int:id>')
@@ -122,9 +142,9 @@ def edit_patient(id):
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM patients WHERE id=?", (id,))
-    patient = cursor.fetchone()
+    patient = list(cursor.fetchone())
 
-    conn.close()
+    patient[2] = datetime.strptime(patient[2], "%d/%m/%Y").strftime("%Y-%m-%d")
 
     return render_template("edit_patient.html", patient=patient)
 
@@ -148,8 +168,8 @@ def update_patient(id):
     if not re.match(email_pattern, email):
         return "Invalid Email Address"
 
-    #   Future DOB Validation
-    dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
+    # Future DOB Validation
+    dob_date = datetime.strptime(dob, "%d/%m/%Y").date()
 
     if dob_date > datetime.today().date():
         return "Date of Birth cannot be in the future"

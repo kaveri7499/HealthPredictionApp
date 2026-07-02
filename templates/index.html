@@ -39,9 +39,37 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Date of Birth</label>
-                        <input type="date" name="dob" id="dob" class="form-control" required>
-                    </div>
+    <label class="form-label">Date of Birth</label>
+
+    <input
+        type="text"
+        name="dob"
+        id="dob"
+        class="form-control"
+        placeholder="DD/MM/YYYY"
+        maxlength="10"
+        required
+    >
+</div>
+
+<script>
+const dob = document.getElementById("dob");
+
+dob.addEventListener("input", function(e) {
+    let value = e.target.value.replace(/\D/g, "");
+
+    if (value.length > 2)
+        value = value.substring(0,2) + "/" + value.substring(2);
+
+    if (value.length > 5)
+        value = value.substring(0,5) + "/" + value.substring(5);
+
+    if (value.length > 10)
+        value = value.substring(0,10);
+
+    e.target.value = value;
+});
+</script>
 
                     <div class="mb-3">
                         <label class="form-label">Email</label>
