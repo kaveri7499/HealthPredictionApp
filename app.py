@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect
 import sqlite3
 
-
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
@@ -10,6 +9,7 @@ load_dotenv()
 
 print("API Key:", os.getenv("GEMINI_API_KEY"))   # Temporary for testing
 
+load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 model = genai.GenerativeModel("gemini-2.5-flash")
@@ -102,7 +102,11 @@ def add_patient():
         return "Invalid Email Address"
 
     # Future DOB Validation
-    dob_date = datetime.strptime(dob, "%d/%m/%Y").date()
+    try:
+        dob_date = datetime.strptime(dob, "%d/%m/%Y").date()
+    except ValueError:
+        dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
+
 
     if dob_date > datetime.today().date():
         return "Date of Birth cannot be in the future"
@@ -161,21 +165,25 @@ def update_patient(id):
     haemoglobin = request.form['haemoglobin']
     cholesterol = request.form['cholesterol']
 
-
     # Email Validation
     email_pattern = r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
 
     if not re.match(email_pattern, email):
         return "Invalid Email Address"
 
-    # Future DOB Validation
-    dob_date = datetime.strptime(dob, "%d/%m/%Y").date()
+    # DOB Validation (supports both DD/MM/YYYY and YYYY-MM-DD)
+    try:
+        dob_date = datetime.strptime(dob, "%d/%m/%Y").date()
+    except ValueError:
+        dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
 
     if dob_date > datetime.today().date():
         return "Date of Birth cannot be in the future"
-    
-    
 
+    # Save DOB in DD/MM/YYYY format
+    dob = dob_date.strftime("%d/%m/%Y")
+
+    # AI Prediction
     remarks = predict_health(glucose, haemoglobin, cholesterol)
 
     conn = sqlite3.connect("database.db")
